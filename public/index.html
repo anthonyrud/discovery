@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Discovery — antdev</title>
+  <meta name="description" content="Passive domain discovery: DNS + HTTP/TLS hints." />
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div>
+        <h1>Discovery</h1>
+        <div class="sub">Enter a domain to infer email/CDN/SaaS from DNS + HTTP/TLS. Evidence-first.</div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <form id="form" class="row">
+        <input id="domain" name="domain" placeholder="example.com" autocomplete="off" spellcheck="false" />
+        <button type="submit">Scan</button>
+        <button type="button" id="copyJson" class="ghost" disabled>Copy JSON</button>
+      </form>
+      <div class="hint">Tip: you can also call <span class="mono">/api/discover?domain=example.com</span></div>
+      <div id="err" class="err"></div>
+    </section>
+
+    <section id="out" class="out"></section>
+
+    <footer class="foot">antdev discovery</footer>
+  </main>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
