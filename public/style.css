@@ -38,7 +38,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 .modal{border:none;padding:0;background:transparent}
 .modal::backdrop{background:rgba(0,0,0,.65)}
-.modalCard{width:min(860px, calc(100vw - 28px));max-height:min(80vh, 820px);overflow:auto;border:1px solid var(--stroke);background:rgba(2,6,23,.92);border-radius:16px;box-shadow:var(--shadow);padding:14px}
+.modalCard{width:min(860px, calc(100vw - 28px));max-height:min(80vh, 820px);overflow:auto;border:1px solid var(--stroke);background:rgba(2,6,23,.92);border-radius:16px;box-shadow:var(--shadow);padding:14px;color:var(--text)}
 .modalTop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
 .modalTitle{font-size:16px;font-weight:900}
 .modalSub{color:var(--muted2);font-size:12px;margin-top:2px}
