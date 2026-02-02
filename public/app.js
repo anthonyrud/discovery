@@ -37,11 +37,98 @@ function renderSection(title, rows, extraHtml=''){
   return `<section class="card"><h2>${escapeHtml(title)}</h2>${inner}${extraHtml}</section>`;
 }
 
+const PROVIDERS = {
+  'Cloudflare DNS': { site: 'https://www.cloudflare.com/', logo: 'https://www.cloudflare.com/favicon.ico' },
+  'AWS Route 53': { site: 'https://aws.amazon.com/route53/', logo: 'https://aws.amazon.com/favicon.ico' },
+  'Azure DNS': { site: 'https://azure.microsoft.com/en-gb/products/dns/', logo: 'https://azure.microsoft.com/favicon.ico' },
+  'Amazon CloudFront': { site: 'https://aws.amazon.com/cloudfront/', logo: 'https://aws.amazon.com/favicon.ico' },
+  'Fastly': { site: 'https://www.fastly.com/', logo: 'https://www.fastly.com/favicon.ico' },
+  'Akamai': { site: 'https://www.akamai.com/', logo: 'https://www.akamai.com/favicon.ico' },
+  'Azure Front Door / CDN': { site: 'https://azure.microsoft.com/en-gb/products/frontdoor/', logo: 'https://azure.microsoft.com/favicon.ico' },
+  "Let's Encrypt": { site: 'https://letsencrypt.org/', logo: 'https://letsencrypt.org/favicon.ico' },
+  'Google Workspace': { site: 'https://workspace.google.com/', logo: 'https://workspace.google.com/favicon.ico' },
+  'Microsoft 365 (Exchange Online)': { site: 'https://www.microsoft.com/microsoft-365', logo: 'https://www.microsoft.com/favicon.ico' },
+  'Proofpoint': { site: 'https://www.proofpoint.com/', logo: 'https://www.proofpoint.com/favicon.ico' },
+  'Mimecast': { site: 'https://www.mimecast.com/', logo: 'https://www.mimecast.com/favicon.ico' },
+  'Mailgun': { site: 'https://www.mailgun.com/', logo: 'https://www.mailgun.com/favicon.ico' },
+  'SendGrid': { site: 'https://sendgrid.com/', logo: 'https://sendgrid.com/favicon.ico' },
+  'Amazon SES': { site: 'https://aws.amazon.com/ses/', logo: 'https://aws.amazon.com/favicon.ico' },
+};
+
+function isProviderFinding(f){
+  if (!f || !f.kind) return false;
+  if (f.kind === 'http') return false;
+  const v = String(f.value || '');
+  if (!v) return false;
+  if (v.includes('=')) return false;
+  if (f.kind === 'email' && v === 'Unknown') return false;
+  return true;
+}
+
+function listProviders(data){
+  const xs = (data.findings || []).filter(isProviderFinding).map(f => String(f.value));
+  return Array.from(new Set(xs));
+}
+
+function providerMeta(name){
+  return PROVIDERS[name] || { site: null, logo: null };
+}
+
+function openProviderModal(providerName, data){
+  const modal = $('providerModal');
+  const meta = providerMeta(providerName);
+
+  $('modalTitle').textContent = providerName;
+  $('modalSub').innerHTML = meta.site ? `<a href="${escapeHtml(meta.site)}" target="_blank" rel="noopener noreferrer">${escapeHtml(meta.site)}</a>` : '';
+
+  const matches = (data.findings || []).filter(f => isProviderFinding(f) && String(f.value) === providerName);
+  const body = matches.map((f) => {
+    const pct = Math.round((f.confidence || 0) * 100);
+    const ev = f.evidence || null;
+    return `
+      <div class="card" style="margin:10px 0">
+        <h2>${escapeHtml(f.kind)} (${pct}%)</h2>
+        <pre>${escapeHtml(JSON.stringify(ev, null, 2))}</pre>
+      </div>
+    `;
+  }).join('') || `<div class="hint">No evidence found.</div>`;
+
+  $('modalBody').innerHTML = body;
+
+  if (typeof modal.showModal === 'function') modal.showModal();
+}
+
+function renderProvidersCard(data){
+  const providers = listProviders(data);
+  if (!providers.length) return '';
+
+  const buttons = providers.map((p) => {
+    const meta = providerMeta(p);
+    const logo = meta.logo
+      ? `<img class="providerLogo" src="${escapeHtml(meta.logo)}" alt="${escapeHtml(p)} logo" loading="lazy" />`
+      : `<div class="providerLogo" style="display:flex;align-items:center;justify-content:center;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid var(--stroke);font-size:11px;font-weight:900">${escapeHtml(p.slice(0,2).toUpperCase())}</div>`;
+
+    const sub = meta.site ? `Official: ${meta.site.replace(/^https?:\/\//,'').replace(/\/$/,'')}` : 'Click to view evidence';
+
+    return `
+      <button type="button" class="providerBtn" data-provider="${escapeHtml(p)}">
+        ${logo}
+        <div>
+          <div class="providerName">${escapeHtml(p)}</div>
+          <div class="providerMeta">${escapeHtml(sub)}</div>
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  return `<section class="card"><h2>Providers discovered</h2><div class="providers">${buttons}</div></section>`;
+}
+
 function render(data){
   lastJson = data;
   $('copyJson').disabled = false;
 
-  const findings = (data.findings || []).map(f => tag(f.kind, `${f.value} (${Math.round((f.confidence||0)*100)}%)`)).join('');
+  const providersCard = renderProvidersCard(data);
 
   const dns = renderSection('DNS overview', [
     { k: 'Domain', v: `<span class="mono">${escapeHtml(data.domain)}</span>` },
@@ -52,7 +139,7 @@ function render(data){
     { k: 'MX', v: (data.dns?.mx||[]).map(x=>`<span class="mono">${escapeHtml(x.exchange)}</span> <span class="mono">(prio ${x.priority})</span>`).join('<br>') || '—' },
     { k: 'TXT (SPF/verify)', v: (data.dns?.txt||[]).slice(0,8).map(x=>`<span class="mono">${escapeHtml(x)}</span>`).join('<br>') || '—' },
     { k: 'DMARC', v: data.email?.dmarc ? `<span class="mono">${escapeHtml(data.email.dmarc)}</span>` : '—' },
-  ], findings ? `<div style="margin-top:10px">${findings}</div>` : '');
+  ]);
 
   const http = renderSection('HTTP / TLS', [
     { k: 'HTTPS URL', v: data.http?.https?.url ? `<a href="${escapeHtml(data.http.https.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.http.https.url)}</a>` : '—' },
@@ -78,7 +165,12 @@ function render(data){
 
   const raw = `<section class="card"><h2>Raw JSON</h2><pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></section>`;
 
-  $('out').innerHTML = `<div class="grid">${dns}${http}</div>${email}${rdap}${raw}`;
+  $('out').innerHTML = `${providersCard}<div class="grid">${dns}${http}</div>${email}${rdap}${raw}`;
+
+  // wire buttons
+  document.querySelectorAll('.providerBtn').forEach((btn) => {
+    btn.addEventListener('click', () => openProviderModal(btn.dataset.provider, data));
+  });
 }
 
 async function scan(domain){
@@ -113,5 +205,23 @@ $('copyJson').addEventListener('click', async () => {
     await navigator.clipboard.writeText(JSON.stringify(lastJson, null, 2));
   } catch {
     // ignore
+  }
+});
+
+// modal wiring
+$('modalClose').addEventListener('click', () => {
+  const m = $('providerModal');
+  if (m?.open) m.close();
+});
+
+$('providerModal').addEventListener('click', (e) => {
+  // click outside the card to close
+  const card = document.querySelector('#providerModal .modalCard');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  const inCard = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  if (!inCard) {
+    const m = $('providerModal');
+    if (m?.open) m.close();
   }
 });

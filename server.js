@@ -41,7 +41,7 @@ app.use((req, res, next) => {
       "form-action 'self'",
       "script-src 'self'",
       "style-src 'self'",
-      "img-src 'self' data:",
+      "img-src 'self' https: data:",
       "connect-src 'self'",
       'upgrade-insecure-requests',
     ].join('; '),

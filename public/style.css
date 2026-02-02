@@ -28,6 +28,21 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .mono{font-family:var(--mono)}
 .err{margin-top:10px;color:#fca5a5;font-size:13px;white-space:pre-wrap}
 .out{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+
+.providers{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.providerBtn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid var(--stroke);background:rgba(255,255,255,.04);cursor:pointer;text-align:left;min-width:180px}
+.providerBtn:hover{border-color:rgba(59,130,246,.6)}
+.providerLogo{width:26px;height:26px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
+.providerName{font-weight:800;font-size:13px}
+.providerMeta{color:var(--muted2);font-size:12px;margin-top:2px}
+
+.modal{border:none;padding:0;background:transparent}
+.modal::backdrop{background:rgba(0,0,0,.65)}
+.modalCard{width:min(860px, calc(100vw - 28px));max-height:min(80vh, 820px);overflow:auto;border:1px solid var(--stroke);background:rgba(2,6,23,.92);border-radius:16px;box-shadow:var(--shadow);padding:14px}
+.modalTop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.modalTitle{font-size:16px;font-weight:900}
+.modalSub{color:var(--muted2);font-size:12px;margin-top:2px}
+.modalBody pre{margin:0}
 .card{border:1px solid var(--stroke);background:rgba(2,6,23,.35);border-radius:16px;padding:14px}
 .card h2{margin:0 0 8px;font-size:14px;letter-spacing:.02em;color:rgba(226,232,240,.9)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
